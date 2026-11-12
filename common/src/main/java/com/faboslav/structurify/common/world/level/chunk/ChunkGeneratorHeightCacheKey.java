@@ -5,13 +5,15 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 
+import java.lang.ref.WeakReference;
+
 final class ChunkGeneratorHeightCacheKey
 {
 	private final ChunkGenerator chunkGenerator;
 	private final int x;
 	private final int z;
 	private final Heightmap.Types heightmapType;
-	private final LevelHeightAccessor heightAccessor;
+	private final WeakReference<LevelHeightAccessor> heightAccessor;
 	private final RandomState randomState;
 	private final int hashCode;
 
@@ -27,7 +29,7 @@ final class ChunkGeneratorHeightCacheKey
 		this.x = x;
 		this.z = z;
 		this.heightmapType = heightmapType;
-		this.heightAccessor = heightAccessor;
+		this.heightAccessor = new WeakReference<>(heightAccessor);
 		this.randomState = randomState;
 
 		int hash = System.identityHashCode(chunkGenerator);
@@ -54,8 +56,14 @@ final class ChunkGeneratorHeightCacheKey
 			   && this.x == other.x
 			   && this.z == other.z
 			   && this.heightmapType == other.heightmapType
-			   && this.heightAccessor == other.heightAccessor
+			   && this.hasSameHeightAccessor(other)
 			   && this.randomState == other.randomState;
+	}
+
+	private boolean hasSameHeightAccessor(ChunkGeneratorHeightCacheKey other) {
+		LevelHeightAccessor heightAccessor = this.heightAccessor.get();
+
+		return heightAccessor != null && heightAccessor == other.heightAccessor.get();
 	}
 
 	@Override
